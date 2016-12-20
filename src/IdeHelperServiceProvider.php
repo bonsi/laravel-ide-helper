@@ -10,10 +10,12 @@
 
 namespace Barryvdh\LaravelIdeHelper;
 
+use Faker\Generator as FakerGenerator;
 use Illuminate\Support\ServiceProvider;
 use Barryvdh\LaravelIdeHelper\Console\MetaCommand;
 use Barryvdh\LaravelIdeHelper\Console\ModelsCommand;
 use Barryvdh\LaravelIdeHelper\Console\GeneratorCommand;
+use Barryvdh\LaravelIdeHelper\EloquentFactory as IdeHelperEloquentFactory;
 
 class IdeHelperServiceProvider extends ServiceProvider
 {
@@ -53,7 +55,7 @@ class IdeHelperServiceProvider extends ServiceProvider
     {
         $configPath = __DIR__ . '/../config/ide-helper.php';
         $this->mergeConfigFrom($configPath, 'ide-helper');
-        
+
         $this->app['command.ide-helper.generate'] = $this->app->share(
             function ($app) {
                 return new GeneratorCommand($app['config'], $app['files'], $app['view']);
@@ -73,6 +75,21 @@ class IdeHelperServiceProvider extends ServiceProvider
         );
 
         $this->commands('command.ide-helper.generate', 'command.ide-helper.models', 'command.ide-helper.meta');
+
+//    use Faker\Generator as FakerGenerator;
+//    use Illuminate\Database\Eloquent\Factory as EloquentFactory;
+//    use Illuminate\Support\ServiceProvider;
+//
+//        class FactoryServiceProvider extends ServiceProvider
+//        {
+//            public function register()
+//            {
+                $this->app->singleton(EloquentFactory::class, function ($app){
+                    return IdeHelperEloquentFactory::construct($app->make(FakerGenerator::class));
+                });
+//            }
+//        }
+
     }
 
     /**

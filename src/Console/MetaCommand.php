@@ -11,6 +11,7 @@
 namespace Barryvdh\LaravelIdeHelper\Console;
 
 use Illuminate\Console\Command;
+use Barryvdh\LaravelIdeHelper\EloquentFactory;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -48,6 +49,7 @@ class MetaCommand extends Command
       '\Illuminate\Contracts\Container\Container::make(\'\')',
       '\App::make(\'\')',
       '\app(\'\')',
+      '\factory(\'\')',
     ];
 
     /**
@@ -69,6 +71,8 @@ class MetaCommand extends Command
      */
     public function fire()
     {
+//        dd($this->getModelFactories());
+
         $this->registerClassAutoloadExceptions();
 
         $bindings = array();
@@ -93,6 +97,7 @@ class MetaCommand extends Command
         $content = $this->view->make('ide-helper::meta', [
           'bindings' => $bindings,
           'methods' => $this->methods,
+          'modelfactories' => $this->getModelFactories(),
         ])->render();
 
         $filename = $this->option('filename');
@@ -138,5 +143,28 @@ class MetaCommand extends Command
         return array(
             array('filename', 'F', InputOption::VALUE_OPTIONAL, 'The path to the meta file', $this->filename),
         );
+    }
+
+
+    /**
+     * Return defined model factory classes.
+     *
+     * @return array
+     */
+    protected function getModelFactories($pathToFactories = null)
+    {
+//        $pathToFactories = $pathToFactories ?: database_path('factories');
+//
+//        return (new static($faker))->load($pathToFactories);
+
+
+        $factory = $this->laravel->make(EloquentFactory::class);
+
+        $rawDefinitions = collect(array_keys($factory->getDefinitions()));
+
+        return $rawDefinitions->map(function ($item) {
+            $key = (new \ReflectionClass($item))->getShortName();
+            return [$item => $key];
+        });
     }
 }
